@@ -1,11 +1,12 @@
 # Cards class
 
+
 class Card(object):
     ''' A single playing card '''
-    RANKS = ['A', '2', '3','4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
+    RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
     SUITS = ['c', 'd', 'h', 's']
-    
-    def __init__(self, rank, suit, face_up = True):
+
+    def __init__(self, rank, suit, face_up=True):
         self.rank = rank
         self.suit = suit
         self.is_face_up = face_up
@@ -23,6 +24,7 @@ class Card(object):
 
 class Hand(object):
     ''' A hand of playing cards '''
+
     def __init__(self):
         self.cards = []
 
@@ -47,7 +49,8 @@ class Hand(object):
 
 
 class Deck(Hand):
-    ''' A Deck of cards ''' 
+    ''' A Deck of cards '''
+
     def __init__(self):
         super(Deck, self).__init__()
         self.empty = False
@@ -61,7 +64,7 @@ class Deck(Hand):
         import random
         random.shuffle(self.cards)
 
-    def deal(self, hands, per_hand = 1):
+    def deal(self, hands, per_hand=1):
         for rounds in range(per_hand):
             for hand in hands:
                 if self.cards:
@@ -69,7 +72,7 @@ class Deck(Hand):
                     self.give(top_card, hand)
                 else:
                     print("Can't continue to deal. Out of cards!")
-                    
-                    
+
+
 if __name__ == "__main__":
     print("You ran this module directly (and did not import 'import' it).")

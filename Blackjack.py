@@ -1,7 +1,10 @@
-# Black jack 
+# Black jack
 # 1 to 7 players compete against the dealer
 
-import Cards, Games
+import Cards
+import Games
+from Bank import *
+
 
 class BJ_Card(Cards.Card):
     ''' A blackjack card '''
@@ -28,9 +31,9 @@ class BJ_Deck(Cards.Deck):
         return len(self.cards)
 
 
-
 class BJ_Hand(Cards.Hand):
-    '''  A blackjack hand ''' 
+    '''  A blackjack hand '''
+
     def __init__(self, name):
         super(BJ_Hand, self).__init__()
         self.name = name
@@ -66,18 +69,39 @@ class BJ_Hand(Cards.Hand):
         return t
 
     def is_busted(self):
-            return self.total > 21
+        return self.total > 21
 
     def has_blackjack(self):
         return self.total == 21
 
+
 class BJ_Player(BJ_Hand):
     ''' A blackjack player '''
+
+    def __init__(self, name, starting_amount=40):
+        super().__init__(name)
+        self.Bank = Bank(starting_amount)
+        self.bet_amount = 0
+
+    def __str__(self):
+        rep = super().__str__() + ' (Bank: {}, Bet: {})'.format(self.Bank.total, self.bet_amount)
+        return rep
+
     def is_hitting(self):
         if self.has_blackjack():
             return False
-        response = Games.ask_yes_no("\n" + self.name + ", do you want to hit? (Y/N): ")
+        response = Games.ask_yes_no(
+            "\n" + self.name + ", do you want to hit? (Y/N): ")
         return response.lower() == "y"
+
+    def bet(self, amount):
+        total = self.Bank.total
+        if total - amount < 0:
+            print('Cannot bet {} not enough money!'.format(amount))
+            return False
+        else:
+            print('{} is betting {} dollars'.format(self.name, amount))
+            return True
 
     def bust(self):
         print(self.name, "busts.")
@@ -87,14 +111,17 @@ class BJ_Player(BJ_Hand):
         print(self.name, "loses.")
 
     def win(self):
-        print(self.name, "wins.")
+        print(self.name, "wins {} dollars.".format(self.bet_amount * 2))
+        self.Bank.total = self.Bank.total + self.bet_amount*2
 
     def push(self):
         print(self.name, "pushes.")
+        self.Bank.total = self.Bank.total + self.bet_amount
 
 
 class BJ_Dealer(BJ_Hand):
     ''' A blackjack dealer '''
+
     def is_hitting(self):
         return self.total < 17
 
@@ -108,12 +135,14 @@ class BJ_Dealer(BJ_Hand):
 
 class BJ_Game(object):
     ''' A blackjack game '''
+
     def __init__(self, names):
         self.players = []
         for name in names:
             player = BJ_Player(name)
             self.players.append(player)
-        
+            print('Starting {} with ${}'.format(name, player.Bank.total))
+
         self.dealer = BJ_Dealer("Dealer")
 
         self.deck = BJ_Deck()   # generates deck
@@ -145,8 +174,19 @@ class BJ_Game(object):
         if len(self.deck) <= 12:
             self.repopulate_deck()
         # deal initial 2 cards to everyone
-        self.deck.deal(self.players + [self.dealer], per_hand = 2)
+        self.deck.deal(self.players + [self.dealer], per_hand=2)
         self.dealer.flip_first_card()       # hide the dealer's first card
+        for player in self.players:
+            while(1):
+                player.bet_amount = Games.ask_number(
+                    '{} How much would you like to bet: ({} - {}): '.format(
+                        player.name, 10, player.Bank.total),
+                    low=10, high=player.Bank.total + 1)
+                if player.bet(player.bet_amount):
+                    break
+
+            player.Bank.total = player.Bank.total - player.bet_amount
+
         for player in self.players:
             print(player)
         print(self.dealer)
@@ -166,7 +206,7 @@ class BJ_Game(object):
             self.__additional_cards(self.dealer)
 
             if self.dealer.is_busted():
-                #everyone still playing wins
+                # everyone still playing wins
                 for player in self.still_playing:
                     player.win()
 
@@ -185,17 +225,17 @@ class BJ_Game(object):
             player.clear()
         self.dealer.clear()
 
-    
+
 def main():
     print("\t\tWelcome to Blackjack!\n")
 
     names = []
-    number = Games.ask_number("How many players? (1 - 7): ", low = 1, high = 8)
+    number = Games.ask_number("How many players? (1 - 7): ", low=1, high=8)
     for i in range(number):
         name = input("Enter player name: ")
         names.append(name)
         print()
-        
+
     game = BJ_Game(names)
 
     again = None
